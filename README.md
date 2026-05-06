@@ -1,4 +1,4 @@
-# YouLite
+# StreamHive
 
 YouLite is a lightweight YouTube-inspired video platform built with PHP, PDO, MySQL, HTML, and CSS.
 
@@ -71,20 +71,13 @@ htdocs/StreamHive
 
 ---
 
-## 3. Create the database
+# Database Setup
 
-Create a MySQL database.
+Import the SQL file located in:
 
-Example:
-
-```sql
-CREATE DATABASE StreamHive;
+```text
+/setup/database.sql
 ```
-
-Then import the SQL file containing:
-- tables
-- relationships
-- dummy data
 
 ---
 
