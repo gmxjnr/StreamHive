@@ -264,6 +264,41 @@ h1 {
     margin-bottom: 16px;
 }
 
+.search-form {
+    flex: 1;
+    max-width: 520px;
+    display: flex;
+    margin: 0 28px;
+}
+
+.search-form input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid #ccc;
+    border-radius: 999px 0 0 999px;
+    font-size: 14px;
+}
+
+.search-form button {
+    padding: 11px 18px;
+    border: 1px solid #ccc;
+    border-left: none;
+    background: #f1f1f1;
+    border-radius: 0 999px 999px 0;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.search-form button:hover {
+    background: #e5e5e5;
+}
+
+.search-result-text {
+    margin-top: -12px;
+    margin-bottom: 24px;
+    color: #666;
+}
+
 /* Responsive */
 
 @media (max-width: 700px) {

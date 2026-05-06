@@ -3,13 +3,19 @@
 <main class="container">
     <h1>Video's</h1>
 
+    <?php if (!empty($search)): ?>
+        <p class="search-result-text">
+            Resultaten voor: <strong><?= htmlspecialchars($search); ?></strong>
+        </p>
+    <?php endif; ?>
+
     <?php if (count($videos) > 0): ?>
         <div class="video-grid">
             <?php foreach ($videos as $video): ?>
                 <a class="video-card" href="index.php?page=video&id=<?= $video['id']; ?>">
 
                     <?php if (!empty($video['thumbnail'])): ?>
-                        <img 
+                        <img
                             class="thumbnail-image"
                             src="/assets/uploads/thumbnails/<?= htmlspecialchars($video['thumbnail']); ?>"
                             alt="<?= htmlspecialchars($video['title']); ?>"
@@ -30,6 +36,7 @@
                             <p><?= htmlspecialchars($video['views']); ?> views</p>
                         </div>
                     </div>
+
                 </a>
             <?php endforeach; ?>
         </div>
