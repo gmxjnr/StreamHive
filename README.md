@@ -54,7 +54,7 @@ The project includes the following tables:
 ## 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/youlite.git
+git clone https://github.com/gmxjnr/StreamHive
 ```
 
 ---
@@ -66,7 +66,7 @@ Place the project inside your local server folder:
 Example for XAMPP:
 
 ```text
-htdocs/youlite
+htdocs/StreamHive
 ```
 
 ---
@@ -78,7 +78,7 @@ Create a MySQL database.
 Example:
 
 ```sql
-CREATE DATABASE youlite;
+CREATE DATABASE StreamHive;
 ```
 
 Then import the SQL file containing:
