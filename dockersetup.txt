@@ -1,0 +1,1 @@
+Nieuwe dag? docker compose up --build
