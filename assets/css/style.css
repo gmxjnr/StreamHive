@@ -1,0 +1,295 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f7f7f8;
+    color: #111;
+}
+
+/* Header */
+
+.header {
+    height: 72px;
+    background: #ffffff;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 30px;
+    font-weight: 800;
+    text-decoration: none;
+    color: #111;
+}
+
+.logo span {
+    color: #e63946;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.nav a {
+    text-decoration: none;
+    color: #111;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    transition: 0.2s ease;
+}
+
+.nav a:hover {
+    color: #e63946;
+    background: #f1f1f1;
+}
+
+/* Layout */
+
+.container {
+    max-width: 1200px;
+    margin: 32px auto;
+    padding: 0 24px;
+}
+
+h1 {
+    margin-bottom: 24px;
+    font-size: 34px;
+}
+
+/* Video grid */
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.video-card {
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #e5e5e5;
+    text-decoration: none;
+    color: inherit;
+    transition: 0.2s ease;
+    display: block;
+}
+
+.video-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.thumbnail {
+    height: 170px;
+    background: linear-gradient(135deg, #20222f, #6c758c);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 48px;
+}
+
+.thumbnail-image {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    display: block;
+}
+
+.video-info {
+    padding: 16px;
+}
+
+.video-info h3 {
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.description {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.meta {
+    font-size: 13px;
+    color: #777;
+    line-height: 1.6;
+}
+
+/* Video detail page */
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 24px;
+    color: #e63946;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+.video-player {
+    width: 100%;
+    max-height: 520px;
+    background: #000;
+    border-radius: 18px;
+    margin-bottom: 24px;
+}
+
+.video-detail {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid #e5e5e5;
+}
+
+/* Comments */
+
+.comments {
+    margin-top: 32px;
+}
+
+.comments h2 {
+    margin-bottom: 18px;
+}
+
+.comment {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+}
+
+.comment strong {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.comment p {
+    margin-bottom: 8px;
+}
+
+.comment small {
+    color: #777;
+}
+
+/* Auth + upload forms */
+
+.auth-card {
+    max-width: 520px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 32px;
+    border-radius: 18px;
+    border: 1px solid #ddd;
+}
+
+.auth-card h1 {
+    margin-bottom: 20px;
+}
+
+.auth-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.auth-card label {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.auth-card input,
+.auth-card textarea {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.auth-card textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.auth-card input:focus,
+.auth-card textarea:focus {
+    outline: none;
+    border-color: #e63946;
+}
+
+.auth-card button {
+    padding: 14px;
+    border: none;
+    background: #e63946;
+    color: #ffffff;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.auth-card button:hover {
+    background: #c92f3b;
+}
+
+.error {
+    color: #b00020;
+    background: #ffe8ec;
+    border: 1px solid #ffc2cc;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+}
+
+/* Responsive */
+
+@media (max-width: 700px) {
+    .header {
+        height: auto;
+        padding: 18px 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .nav {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .container {
+        margin: 24px auto;
+        padding: 0 18px;
+    }
+
+    h1 {
+        font-size: 28px;
+    }
+
+    .video-grid {
+        grid-template-columns: 1fr;
+    }
+}

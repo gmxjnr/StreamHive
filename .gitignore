@@ -1,0 +1,15 @@
+.env
+
+.DS_Store
+Thumbs.db
+
+assets/uploads/*.mp4
+assets/uploads/*.webm
+assets/uploads/*.ogg
+assets/uploads/thumbnails/*.jpg
+assets/uploads/thumbnails/*.jpeg
+assets/uploads/thumbnails/*.png
+assets/uploads/thumbnails/*.webp
+
+!assets/uploads/.gitkeep
+!assets/uploads/thumbnails/.gitkeep
