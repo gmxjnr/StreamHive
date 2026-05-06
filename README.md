@@ -71,7 +71,7 @@ htdocs/StreamHive
 
 ---
 
-# Database Setup
+# 3. Database Setup
 
 Import the SQL file located in:
 
