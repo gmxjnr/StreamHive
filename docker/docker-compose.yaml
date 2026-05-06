@@ -5,6 +5,7 @@ services:
       dockerfile: docker/Dockerfile
     volumes:
       - ../:/var/www/html
+      - ./php.ini:/usr/local/etc/php/conf.d/uploads.ini
 
   nginx:
     image: nginx:latest
