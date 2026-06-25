@@ -7,9 +7,10 @@ require_once dirname(__DIR__, 2) . '/core/Database.php';
 /**
  * VideoModel
  *
- * Data access for the `videos` table. Week 2 covers the basic CRUD that the
- * other layers need first: reading and creating. The JOIN with users, search
- * and the view counter are added in later weeks, as planned in the README.
+ * Data access for the `videos` table. This is the only layer that runs SQL
+ * against that table, and every statement is prepared. The *WithUser methods
+ * JOIN the `users` table so the overview and detail pages can show the name of
+ * the uploader without a second query.
  */
 class VideoModel
 {
@@ -40,6 +41,25 @@ class VideoModel
     }
 
     /**
+     * Find a single video together with its uploader's username, or null.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findByIdWithUser(int $id): ?array
+    {
+        $sql = 'SELECT videos.id, videos.user_id, videos.title, videos.description,
+                       videos.filename, videos.views, videos.created_at,
+                       users.username AS uploader
+                FROM videos
+                INNER JOIN users ON users.id = videos.user_id
+                WHERE videos.id = :id';
+
+        $video = $this->database->query($sql, ['id' => $id])->fetch();
+
+        return $video === false ? null : $video;
+    }
+
+    /**
      * Return all videos, newest first.
      *
      * @return array<int, array<string, mixed>>
@@ -49,6 +69,24 @@ class VideoModel
         $sql = 'SELECT id, user_id, title, description, filename, views, created_at
                 FROM videos
                 ORDER BY created_at DESC, id DESC';
+
+        return $this->database->query($sql)->fetchAll();
+    }
+
+    /**
+     * Return all videos together with their uploader's username, newest first.
+     * Uses a JOIN so the overview shows who uploaded each video.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function findAllWithUser(): array
+    {
+        $sql = 'SELECT videos.id, videos.title, videos.description, videos.filename,
+                       videos.views, videos.created_at,
+                       users.username AS uploader
+                FROM videos
+                INNER JOIN users ON users.id = videos.user_id
+                ORDER BY videos.created_at DESC, videos.id DESC';
 
         return $this->database->query($sql)->fetchAll();
     }
@@ -73,5 +111,38 @@ class VideoModel
         ]);
 
         return $this->database->lastInsertId();
+    }
+
+    /**
+     * Update the title and description of a video.
+     *
+     * @param array<string, mixed> $data Expected keys: title, description.
+     */
+    public function update(int $id, array $data): bool
+    {
+        $sql = 'UPDATE videos
+                SET title = :title, description = :description
+                WHERE id = :id';
+
+        $statement = $this->database->query($sql, [
+            'title'       => $data['title'],
+            'description' => $data['description'] ?? null,
+            'id'          => $id,
+        ]);
+
+        return $statement->rowCount() > 0;
+    }
+
+    /**
+     * Delete a video by id. Comments and likes are removed automatically through
+     * the ON DELETE CASCADE foreign keys.
+     */
+    public function delete(int $id): bool
+    {
+        $sql = 'DELETE FROM videos WHERE id = :id';
+
+        $statement = $this->database->query($sql, ['id' => $id]);
+
+        return $statement->rowCount() > 0;
     }
 }

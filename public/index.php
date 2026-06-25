@@ -13,13 +13,19 @@ declare(strict_types=1);
 session_start();
 
 require_once __DIR__ . '/../core/Router.php';
-require_once __DIR__ . '/../app/controllers/HomeController.php';
+require_once __DIR__ . '/../app/controllers/VideoController.php';
 require_once __DIR__ . '/../app/controllers/AuthController.php';
 
 $router = new Router();
 
-$router->get('/', [HomeController::class, 'index']);
+// Videos (the overview is the home page).
+$router->get('/', [VideoController::class, 'index']);
+$router->get('/videos/upload', [VideoController::class, 'create']);
+$router->post('/videos/upload', [VideoController::class, 'store']);
+$router->get('/videos/show', [VideoController::class, 'show']);
+$router->post('/videos/delete', [VideoController::class, 'delete']);
 
+// Authentication.
 $router->get('/register', [AuthController::class, 'showRegister']);
 $router->post('/register', [AuthController::class, 'register']);
 $router->get('/login', [AuthController::class, 'showLogin']);
