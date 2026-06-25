@@ -4,23 +4,34 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 2) . '/core/Controller.php';
 require_once dirname(__DIR__, 2) . '/app/services/VideoService.php';
+require_once dirname(__DIR__, 2) . '/app/services/CommentService.php';
+require_once dirname(__DIR__, 2) . '/app/services/LikeService.php';
 require_once dirname(__DIR__, 2) . '/app/services/AuthService.php';
 
 /**
  * VideoController
  *
- * Handles the video overview, the detail page, and uploading and deleting
- * videos. It reads the request, asks AuthService whether the visitor is allowed
- * to perform the action, and delegates the work to VideoService. No SQL here.
+ * Handles the video overview, the detail page (with its comments and likes),
+ * and uploading and deleting videos. It reads the request, asks AuthService
+ * whether the visitor is allowed to perform the action, and delegates the work
+ * to the services. No SQL here.
  */
 class VideoController extends Controller
 {
     private VideoService $videoService;
+    private CommentService $commentService;
+    private LikeService $likeService;
     private AuthService $authService;
 
-    public function __construct(?VideoService $videoService = null, ?AuthService $authService = null)
-    {
+    public function __construct(
+        ?VideoService $videoService = null,
+        ?CommentService $commentService = null,
+        ?LikeService $likeService = null,
+        ?AuthService $authService = null
+    ) {
         $this->videoService = $videoService ?? new VideoService();
+        $this->commentService = $commentService ?? new CommentService();
+        $this->likeService = $likeService ?? new LikeService();
         $this->authService = $authService ?? new AuthService();
     }
 
@@ -37,7 +48,8 @@ class VideoController extends Controller
     }
 
     /**
-     * Show a single video (GET /videos/show?id=...).
+     * Show a single video with its comments and like state
+     * (GET /videos/show?id=...).
      */
     public function show(): void
     {
@@ -51,9 +63,14 @@ class VideoController extends Controller
             return;
         }
 
+        $currentUser = $this->authService->getCurrentUser();
+        $currentUserId = $currentUser !== null ? (int) $currentUser['id'] : null;
+
         $this->render('videos/show', [
-            'title' => $video['title'] . ' — StreamHive',
-            'video' => $video,
+            'title'     => $video['title'] . ' — StreamHive',
+            'video'     => $video,
+            'comments'  => $this->commentService->getComments($id, $currentUserId),
+            'videoLike' => $this->likeService->videoLikeInfo($id, $currentUserId),
         ]);
     }
 
@@ -113,16 +130,5 @@ class VideoController extends Controller
         $this->videoService->delete($id, (int) $currentUser['id'], $this->authService->isAdmin());
 
         $this->redirect('/');
-    }
-
-    /**
-     * Redirect guests to the login page before a protected action.
-     */
-    private function requireLogin(): void
-    {
-        if (!$this->authService->isLoggedIn())
-        {
-            $this->redirect('/login');
-        }
     }
 }

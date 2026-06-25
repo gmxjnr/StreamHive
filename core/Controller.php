@@ -5,10 +5,10 @@ declare(strict_types=1);
 /**
  * Controller
  *
- * Small base class that every controller extends. It provides two things every
- * controller needs: rendering a view (wrapped in the shared header/footer) and
- * redirecting. Controllers stay focused on handling the request and never touch
- * the database directly.
+ * Small base class that every controller extends. It provides the things every
+ * controller needs: rendering a view (wrapped in the shared header/footer),
+ * redirecting, and guarding actions that require a logged-in user. Controllers
+ * stay focused on handling the request and never touch the database directly.
  */
 abstract class Controller
 {
@@ -48,5 +48,17 @@ abstract class Controller
     {
         header('Location: ' . $path);
         exit;
+    }
+
+    /**
+     * Redirect guests to the login page before a protected action. Shared by
+     * every controller that has actions only logged-in users may perform.
+     */
+    protected function requireLogin(): void
+    {
+        if (!isset($_SESSION['user']['id']))
+        {
+            $this->redirect('/login');
+        }
     }
 }

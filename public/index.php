@@ -15,6 +15,8 @@ session_start();
 require_once __DIR__ . '/../core/Router.php';
 require_once __DIR__ . '/../app/controllers/VideoController.php';
 require_once __DIR__ . '/../app/controllers/AuthController.php';
+require_once __DIR__ . '/../app/controllers/CommentController.php';
+require_once __DIR__ . '/../app/controllers/LikeController.php';
 
 $router = new Router();
 
@@ -24,6 +26,14 @@ $router->get('/videos/upload', [VideoController::class, 'create']);
 $router->post('/videos/upload', [VideoController::class, 'store']);
 $router->get('/videos/show', [VideoController::class, 'show']);
 $router->post('/videos/delete', [VideoController::class, 'delete']);
+
+// Comments.
+$router->post('/comments/store', [CommentController::class, 'store']);
+$router->post('/comments/delete', [CommentController::class, 'delete']);
+
+// Likes.
+$router->post('/likes/video', [LikeController::class, 'toggleVideo']);
+$router->post('/likes/comment', [LikeController::class, 'toggleComment']);
 
 // Authentication.
 $router->get('/register', [AuthController::class, 'showRegister']);
