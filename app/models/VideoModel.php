@@ -159,26 +159,6 @@ class VideoModel
     }
 
     /**
-     * Update the title and description of a video.
-     *
-     * @param array<string, mixed> $data Expected keys: title, description.
-     */
-    public function update(int $id, array $data): bool
-    {
-        $sql = 'UPDATE videos
-                SET title = :title, description = :description
-                WHERE id = :id';
-
-        $statement = $this->database->query($sql, [
-            'title'       => $data['title'],
-            'description' => $data['description'] ?? null,
-            'id'          => $id,
-        ]);
-
-        return $statement->rowCount() > 0;
-    }
-
-    /**
      * Increase the view count of a video by one.
      */
     public function incrementViews(int $id): void
