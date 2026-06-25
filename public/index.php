@@ -5,20 +5,25 @@ declare(strict_types=1);
 /**
  * StreamHive front controller (entry point).
  *
- * Week 1: this is a placeholder page that only proves the project structure
- * and the header/footer includes work. Real request routing through the
- * Router is added in a later week.
+ * Every request that is not an existing file is routed here by Nginx. This file
+ * starts the session, registers the routes and dispatches the current request
+ * to the matching controller action.
  */
 
-$title = 'StreamHive — Home';
+session_start();
 
-require __DIR__ . '/../views/partials/header.php';
-?>
+require_once __DIR__ . '/../core/Router.php';
+require_once __DIR__ . '/../app/controllers/HomeController.php';
+require_once __DIR__ . '/../app/controllers/AuthController.php';
 
-    <section>
-        <h2>Hello StreamHive</h2>
-        <p>The project skeleton is up and running.</p>
-    </section>
+$router = new Router();
 
-<?php
-require __DIR__ . '/../views/partials/footer.php';
+$router->get('/', [HomeController::class, 'index']);
+
+$router->get('/register', [AuthController::class, 'showRegister']);
+$router->post('/register', [AuthController::class, 'register']);
+$router->get('/login', [AuthController::class, 'showLogin']);
+$router->post('/login', [AuthController::class, 'login']);
+$router->get('/logout', [AuthController::class, 'logout']);
+
+$router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

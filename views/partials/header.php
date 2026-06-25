@@ -5,8 +5,10 @@ declare(strict_types=1);
 /**
  * Shared page header, included at the top of every view.
  *
- * The including script may set $title before the include to change the page
- * title; otherwise a sensible default is used.
+ * Variables provided by Controller::render():
+ *
+ * @var string                     $title       Page title.
+ * @var array<string, mixed>|null  $currentUser Logged-in user, or null.
  */
 
 $pageTitle = isset($title) ? $title : 'StreamHive';
@@ -23,6 +25,13 @@ $pageTitle = isset($title) ? $title : 'StreamHive';
         <h1><a href="/">StreamHive</a></h1>
         <nav>
             <a href="/">Home</a>
+            <?php if (!empty($currentUser)): ?>
+                <span>Hi, <?= htmlspecialchars($currentUser['username']) ?></span>
+                <a href="/logout">Log out</a>
+            <?php else: ?>
+                <a href="/login">Log in</a>
+                <a href="/register">Register</a>
+            <?php endif; ?>
         </nav>
     </header>
     <main>
