@@ -52,9 +52,8 @@ deliverables: architecture, ERD, class diagram and the project skeleton.
 └── README.md
 ```
 
-> The current `setup/database.sql` already contains the full schema and dummy
-> data; in Week 2 it moves to `database/schema.sql` as required by the
-> assignment.
+> `database/schema.sql` contains the full schema **and** the dummy data, so the
+> database can be recreated from a single file.
 
 ---
 
@@ -82,7 +81,7 @@ Response ← View  ◄───────────────────�
 
 ## ERD (Entity Relationship Diagram)
 
-This diagram matches the database schema exactly (see `setup/database.sql`).
+This diagram matches the database schema exactly (see `database/schema.sql`).
 
 ```mermaid
 erDiagram
