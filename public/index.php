@@ -5,20 +5,47 @@ declare(strict_types=1);
 /**
  * StreamHive front controller (entry point).
  *
- * Week 1: this is a placeholder page that only proves the project structure
- * and the header/footer includes work. Real request routing through the
- * Router is added in a later week.
+ * Every request that is not an existing file is routed here by Nginx. This file
+ * starts the session, registers the routes and dispatches the current request
+ * to the matching controller action.
  */
 
-$title = 'StreamHive — Home';
+session_start();
 
-require __DIR__ . '/../views/partials/header.php';
-?>
+require_once __DIR__ . '/../core/Router.php';
+require_once __DIR__ . '/../app/controllers/VideoController.php';
+require_once __DIR__ . '/../app/controllers/AuthController.php';
+require_once __DIR__ . '/../app/controllers/CommentController.php';
+require_once __DIR__ . '/../app/controllers/LikeController.php';
 
-    <section>
-        <h2>Hello StreamHive</h2>
-        <p>The project skeleton is up and running.</p>
-    </section>
+$router = new Router();
 
-<?php
-require __DIR__ . '/../views/partials/footer.php';
+// Videos (the overview is the home page).
+$router->get('/', [VideoController::class, 'index']);
+$router->get('/videos/upload', [VideoController::class, 'create']);
+$router->post('/videos/upload', [VideoController::class, 'store']);
+$router->get('/videos/show', [VideoController::class, 'show']);
+$router->post('/videos/delete', [VideoController::class, 'delete']);
+
+// Comments.
+$router->post('/comments/store', [CommentController::class, 'store']);
+$router->post('/comments/delete', [CommentController::class, 'delete']);
+
+// Likes.
+$router->post('/likes/video', [LikeController::class, 'toggleVideo']);
+$router->post('/likes/comment', [LikeController::class, 'toggleComment']);
+
+// Authentication.
+$router->get('/register', [AuthController::class, 'showRegister']);
+$router->post('/register', [AuthController::class, 'register']);
+$router->get('/login', [AuthController::class, 'showLogin']);
+$router->post('/login', [AuthController::class, 'login']);
+$router->get('/logout', [AuthController::class, 'logout']);
+
+// Password recovery.
+$router->get('/forgot', [AuthController::class, 'showForgotPassword']);
+$router->post('/forgot', [AuthController::class, 'forgotPassword']);
+$router->get('/reset', [AuthController::class, 'showReset']);
+$router->post('/reset', [AuthController::class, 'resetPassword']);
+
+$router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
