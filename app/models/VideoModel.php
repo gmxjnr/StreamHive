@@ -92,6 +92,51 @@ class VideoModel
     }
 
     /**
+     * Search videos by title or description (case-insensitive LIKE), with the
+     * uploader's username. Two separate placeholders are used because native
+     * prepared statements do not allow reusing one placeholder.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function search(string $term): array
+    {
+        $sql = 'SELECT videos.id, videos.title, videos.description, videos.filename,
+                       videos.views, videos.created_at,
+                       users.username AS uploader
+                FROM videos
+                INNER JOIN users ON users.id = videos.user_id
+                WHERE videos.title LIKE :title_term
+                   OR videos.description LIKE :description_term
+                ORDER BY videos.created_at DESC, videos.id DESC';
+
+        $like = '%' . $term . '%';
+
+        return $this->database->query($sql, [
+            'title_term'       => $like,
+            'description_term' => $like,
+        ])->fetchAll();
+    }
+
+    /**
+     * Return all videos in a category, with the uploader's username.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function findByCategory(int $categoryId): array
+    {
+        $sql = 'SELECT videos.id, videos.title, videos.description, videos.filename,
+                       videos.views, videos.created_at,
+                       users.username AS uploader
+                FROM videos
+                INNER JOIN users ON users.id = videos.user_id
+                INNER JOIN video_category ON video_category.video_id = videos.id
+                WHERE video_category.category_id = :category_id
+                ORDER BY videos.created_at DESC, videos.id DESC';
+
+        return $this->database->query($sql, ['category_id' => $categoryId])->fetchAll();
+    }
+
+    /**
      * Insert a new video and return the generated id.
      *
      * Expected keys: user_id, title, filename, description (optional).
@@ -134,8 +179,18 @@ class VideoModel
     }
 
     /**
-     * Delete a video by id. Comments and likes are removed automatically through
-     * the ON DELETE CASCADE foreign keys.
+     * Increase the view count of a video by one.
+     */
+    public function incrementViews(int $id): void
+    {
+        $sql = 'UPDATE videos SET views = views + 1 WHERE id = :id';
+
+        $this->database->query($sql, ['id' => $id]);
+    }
+
+    /**
+     * Delete a video by id. Comments, likes and category links are removed
+     * automatically through the ON DELETE CASCADE foreign keys.
      */
     public function delete(int $id): bool
     {

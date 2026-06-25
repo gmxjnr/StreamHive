@@ -42,4 +42,10 @@ $router->get('/login', [AuthController::class, 'showLogin']);
 $router->post('/login', [AuthController::class, 'login']);
 $router->get('/logout', [AuthController::class, 'logout']);
 
+// Password recovery.
+$router->get('/forgot', [AuthController::class, 'showForgotPassword']);
+$router->post('/forgot', [AuthController::class, 'forgotPassword']);
+$router->get('/reset', [AuthController::class, 'showReset']);
+$router->post('/reset', [AuthController::class, 'resetPassword']);
+
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

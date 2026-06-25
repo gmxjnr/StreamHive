@@ -8,9 +8,10 @@ require_once dirname(__DIR__, 2) . '/app/services/AuthService.php';
 /**
  * AuthController
  *
- * Handles the login, registration and logout requests. It reads the form input,
- * delegates the actual work to AuthService and then either redirects on success
- * or re-renders the form with the validation errors. No SQL lives here.
+ * Handles login, registration, logout and the password-recovery flow. It reads
+ * the form input, delegates the actual work to AuthService and then either
+ * redirects on success or re-renders the form with the validation errors. No
+ * SQL lives here.
  */
 class AuthController extends Controller
 {
@@ -108,5 +109,104 @@ class AuthController extends Controller
     {
         $this->authService->logout();
         $this->redirect('/');
+    }
+
+    /**
+     * Show the "forgot password" form (GET /forgot).
+     */
+    public function showForgotPassword(): void
+    {
+        if ($this->authService->isLoggedIn())
+        {
+            $this->redirect('/');
+        }
+
+        $this->render('auth/forgot', [
+            'title'     => 'StreamHive — Forgot password',
+            'errors'    => [],
+            'email'     => '',
+            'resetLink' => null,
+        ]);
+    }
+
+    /**
+     * Process the "forgot password" form (POST /forgot). For this school project
+     * the reset link is shown on screen instead of being emailed.
+     */
+    public function forgotPassword(): void
+    {
+        if ($this->authService->isLoggedIn())
+        {
+            $this->redirect('/');
+        }
+
+        $email = $_POST['email'] ?? '';
+        $token = $this->authService->requestPasswordReset($email);
+
+        $this->render('auth/forgot', [
+            'title'     => 'StreamHive — Forgot password',
+            'errors'    => $token === null ? ['No account was found with that email address.'] : [],
+            'email'     => $email,
+            'resetLink' => $token !== null ? $this->resetLinkFor($token) : null,
+        ]);
+    }
+
+    /**
+     * Show the reset form for a token (GET /reset?token=...).
+     */
+    public function showReset(): void
+    {
+        $token = (string) ($_GET['token'] ?? '');
+
+        $this->render('auth/reset', [
+            'title'   => 'StreamHive — Reset password',
+            'token'   => $token,
+            'valid'   => $this->authService->isValidResetToken($token),
+            'errors'  => [],
+            'success' => false,
+        ]);
+    }
+
+    /**
+     * Process the reset form (POST /reset).
+     */
+    public function resetPassword(): void
+    {
+        $token = (string) ($_POST['token'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $passwordConfirm = $_POST['password_confirm'] ?? '';
+
+        $errors = $this->authService->resetPassword($token, $password, $passwordConfirm);
+
+        if ($errors === [])
+        {
+            $this->render('auth/reset', [
+                'title'   => 'StreamHive — Reset password',
+                'token'   => $token,
+                'valid'   => false,
+                'errors'  => [],
+                'success' => true,
+            ]);
+            return;
+        }
+
+        $this->render('auth/reset', [
+            'title'   => 'StreamHive — Reset password',
+            'token'   => $token,
+            'valid'   => $this->authService->isValidResetToken($token),
+            'errors'  => $errors,
+            'success' => false,
+        ]);
+    }
+
+    /**
+     * Build an absolute reset URL for a token, based on the current host.
+     */
+    private function resetLinkFor(string $token): string
+    {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+        return $scheme . '://' . $host . '/reset?token=' . $token;
     }
 }

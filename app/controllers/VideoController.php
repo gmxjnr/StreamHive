@@ -11,10 +11,10 @@ require_once dirname(__DIR__, 2) . '/app/services/AuthService.php';
 /**
  * VideoController
  *
- * Handles the video overview, the detail page (with its comments and likes),
- * and uploading and deleting videos. It reads the request, asks AuthService
- * whether the visitor is allowed to perform the action, and delegates the work
- * to the services. No SQL here.
+ * Handles the video overview (with search and category filtering), the detail
+ * page (with its view counter, comments and likes), and uploading and deleting
+ * videos. It reads the request, asks AuthService whether the visitor is allowed
+ * to perform the action, and delegates the work to the services. No SQL here.
  */
 class VideoController extends Controller
 {
@@ -36,24 +36,36 @@ class VideoController extends Controller
     }
 
     /**
-     * Show the video overview / home page (GET /). Uses the JOIN data so each
-     * video shows its uploader.
+     * Show the video overview / home page (GET /). Supports an optional search
+     * term (?search=) and category filter (?category=).
      */
     public function index(): void
     {
+        $search = isset($_GET['search']) ? (string) $_GET['search'] : '';
+        $categoryId = isset($_GET['category']) ? (int) $_GET['category'] : null;
+
+        $activeCategory = $categoryId !== null ? $this->videoService->getCategory($categoryId) : null;
+
         $this->render('videos/index', [
-            'title'  => 'StreamHive — Videos',
-            'videos' => $this->videoService->getAllWithUploader(),
+            'title'            => 'StreamHive — Videos',
+            'videos'           => $this->videoService->getOverview($search, $categoryId),
+            'categories'       => $this->videoService->getCategories(),
+            'search'           => $search,
+            'activeCategoryId' => $categoryId,
+            'activeCategory'   => $activeCategory,
         ]);
     }
 
     /**
-     * Show a single video with its comments and like state
+     * Show a single video with its comments and like state, and count one view
      * (GET /videos/show?id=...).
      */
     public function show(): void
     {
         $id = (int) ($_GET['id'] ?? 0);
+
+        // Count the visit before reading, so the displayed count includes it.
+        $this->videoService->recordView($id);
         $video = $this->videoService->getWithUploader($id);
 
         if ($video === null)
@@ -67,10 +79,11 @@ class VideoController extends Controller
         $currentUserId = $currentUser !== null ? (int) $currentUser['id'] : null;
 
         $this->render('videos/show', [
-            'title'     => $video['title'] . ' — StreamHive',
-            'video'     => $video,
-            'comments'  => $this->commentService->getComments($id, $currentUserId),
-            'videoLike' => $this->likeService->videoLikeInfo($id, $currentUserId),
+            'title'      => $video['title'] . ' — StreamHive',
+            'video'      => $video,
+            'categories' => $this->videoService->getVideoCategories($id),
+            'comments'   => $this->commentService->getComments($id, $currentUserId),
+            'videoLike'  => $this->likeService->videoLikeInfo($id, $currentUserId),
         ]);
     }
 
@@ -82,10 +95,12 @@ class VideoController extends Controller
         $this->requireLogin();
 
         $this->render('videos/upload', [
-            'title'       => 'StreamHive — Upload',
-            'errors'      => [],
-            'titleValue'  => '',
-            'description' => '',
+            'title'              => 'StreamHive — Upload',
+            'errors'             => [],
+            'titleValue'         => '',
+            'description'        => '',
+            'categories'         => $this->videoService->getCategories(),
+            'selectedCategories' => [],
         ]);
     }
 
@@ -100,8 +115,9 @@ class VideoController extends Controller
         $title = $_POST['title'] ?? '';
         $description = $_POST['description'] ?? '';
         $file = $_FILES['video'] ?? [];
+        $categoryIds = isset($_POST['categories']) && is_array($_POST['categories']) ? $_POST['categories'] : [];
 
-        $result = $this->videoService->upload((int) $currentUser['id'], $title, $description, $file);
+        $result = $this->videoService->upload((int) $currentUser['id'], $title, $description, $file, $categoryIds);
 
         if ($result['errors'] === [])
         {
@@ -109,10 +125,12 @@ class VideoController extends Controller
         }
 
         $this->render('videos/upload', [
-            'title'       => 'StreamHive — Upload',
-            'errors'      => $result['errors'],
-            'titleValue'  => $title,
-            'description' => $description,
+            'title'              => 'StreamHive — Upload',
+            'errors'             => $result['errors'],
+            'titleValue'         => $title,
+            'description'        => $description,
+            'categories'         => $this->videoService->getCategories(),
+            'selectedCategories' => array_map('intval', $categoryIds),
         ]);
     }
 

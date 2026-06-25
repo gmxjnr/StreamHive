@@ -326,8 +326,19 @@ docker compose -f docker/docker-compose.yaml up --build
 #    http://localhost:8888
 ```
 
-In Week 1 the app shows a "Hello StreamHive" placeholder page to prove the
-structure and the shared header/footer includes work.
+The web root is `public/`, so every request is routed through
+`public/index.php` (the front controller).
+
+---
+
+## Notes & known limitations
+
+- **Password recovery link.** The "forgot password" flow generates a real,
+  time-limited reset token, but for this school project the reset link is shown
+  on screen instead of being sent by email. In a production app it would be
+  emailed to the user.
+- **Uploads folder.** Uploaded video files are stored in `public/uploads/`
+  (git-ignored). That folder must be writable by the PHP process.
 
 ---
 

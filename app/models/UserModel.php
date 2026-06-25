@@ -91,4 +91,19 @@ class UserModel
 
         return $this->database->lastInsertId();
     }
+
+    /**
+     * Replace a user's password hash (used by the password reset flow).
+     */
+    public function updatePassword(int $id, string $passwordHash): bool
+    {
+        $sql = 'UPDATE users SET password = :password WHERE id = :id';
+
+        $statement = $this->database->query($sql, [
+            'password' => $passwordHash,
+            'id'       => $id,
+        ]);
+
+        return $statement->rowCount() > 0;
+    }
 }

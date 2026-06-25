@@ -36,5 +36,6 @@ declare(strict_types=1);
             </p>
         </form>
 
+        <p>Forgot your password? <a href="/forgot">Reset it here</a>.</p>
         <p>No account yet? <a href="/register">Register here</a>.</p>
     </section>

@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 /**
- * Video detail page: player, like button, and the comment section.
+ * Video detail page: player, categories, like button, and the comment section.
  *
  * @var array<string, mixed>             $video       Video with uploader name.
+ * @var array<int, array<string, mixed>> $categories  This video's categories.
  * @var array<int, array<string, mixed>> $comments    Comments with author + likes.
  * @var array{count: int, liked: bool}   $videoLike   Like count + own like state.
  * @var array<string, mixed>|null        $currentUser Logged-in user, or null.
@@ -42,6 +43,16 @@ $isAdmin = !empty($currentUser) && ($currentUser['role'] ?? '') === 'admin';
                 <span class="like-button static">&hearts; <?= (int) $videoLike['count'] ?></span>
             <?php endif; ?>
         </div>
+
+        <?php if (!empty($categories)): ?>
+            <p class="category-tags">
+                <?php foreach ($categories as $category): ?>
+                    <a class="tag" href="/?category=<?= (int) $category['id'] ?>">
+                        <?= htmlspecialchars($category['name']) ?>
+                    </a>
+                <?php endforeach; ?>
+            </p>
+        <?php endif; ?>
 
         <?php if (!empty($video['description'])): ?>
             <p class="description"><?= nl2br(htmlspecialchars($video['description'])) ?></p>

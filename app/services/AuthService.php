@@ -3,25 +3,38 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__, 2) . '/app/models/UserModel.php';
+require_once dirname(__DIR__, 2) . '/app/models/PasswordResetModel.php';
 
 /**
  * AuthService
  *
  * All authentication business logic lives here: validating and registering new
- * accounts (hashing the password), logging in (verifying the password) and
- * keeping track of the logged-in user in the session. It also exposes the
- * authorisation checks (isLoggedIn / isAdmin) used by other parts of the app.
+ * accounts (hashing the password), logging in (verifying the password), keeping
+ * track of the logged-in user in the session, and the password-recovery flow
+ * (issuing and redeeming reset tokens). It also exposes the authorisation
+ * checks (isLoggedIn / isAdmin) used by other parts of the app.
  */
 class AuthService
 {
+    /**
+     * How long a password reset token stays valid, in seconds.
+     */
+    private const RESET_TOKEN_LIFETIME = 3600;
+
     /**
      * Data access for the users table.
      */
     private UserModel $userModel;
 
-    public function __construct(?UserModel $userModel = null)
+    /**
+     * Data access for the password_reset table.
+     */
+    private PasswordResetModel $passwordResetModel;
+
+    public function __construct(?UserModel $userModel = null, ?PasswordResetModel $passwordResetModel = null)
     {
         $this->userModel = $userModel ?? new UserModel();
+        $this->passwordResetModel = $passwordResetModel ?? new PasswordResetModel();
     }
 
     /**
@@ -119,6 +132,75 @@ class AuthService
         $this->startSession();
 
         return $_SESSION['user'] ?? null;
+    }
+
+    /**
+     * Start a password reset for an email address. Returns a fresh token when
+     * the email belongs to an account, or null otherwise. Any older tokens for
+     * that user are removed first, so only the latest token works.
+     */
+    public function requestPasswordReset(string $email): ?string
+    {
+        $user = $this->userModel->findByEmail(trim($email));
+
+        if ($user === null)
+        {
+            return null;
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $expiresAt = date('Y-m-d H:i:s', time() + self::RESET_TOKEN_LIFETIME);
+
+        $this->passwordResetModel->deleteForUser((int) $user['id']);
+        $this->passwordResetModel->create((int) $user['id'], $token, $expiresAt);
+
+        return $token;
+    }
+
+    /**
+     * Whether a reset token exists and has not expired.
+     */
+    public function isValidResetToken(string $token): bool
+    {
+        return $token !== '' && $this->passwordResetModel->findValidByToken($token) !== null;
+    }
+
+    /**
+     * Set a new password using a reset token. Returns a list of errors; an empty
+     * list means the password was changed and the token consumed.
+     *
+     * @return array<int, string>
+     */
+    public function resetPassword(string $token, string $password, string $passwordConfirm): array
+    {
+        $errors = [];
+
+        if (mb_strlen($password) < 8)
+        {
+            $errors[] = 'Password must be at least 8 characters long.';
+        }
+
+        if ($password !== $passwordConfirm)
+        {
+            $errors[] = 'The passwords do not match.';
+        }
+
+        if ($errors !== [])
+        {
+            return $errors;
+        }
+
+        $reset = $this->passwordResetModel->findValidByToken($token);
+
+        if ($reset === null)
+        {
+            return ['This reset link is invalid or has expired.'];
+        }
+
+        $this->userModel->updatePassword((int) $reset['user_id'], password_hash($password, PASSWORD_DEFAULT));
+        $this->passwordResetModel->deleteByToken($token);
+
+        return [];
     }
 
     /**

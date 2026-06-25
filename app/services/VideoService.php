@@ -3,14 +3,15 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__, 2) . '/app/models/VideoModel.php';
+require_once dirname(__DIR__, 2) . '/app/services/CategoryService.php';
 
 /**
  * VideoService
  *
- * Business logic for videos: validating uploads, storing the uploaded file
- * safely on disk, and enforcing who is allowed to delete a video. The
- * controller calls this service; the service calls the model. No SQL lives
- * here, and no request handling either.
+ * Business logic for videos: building the (optionally filtered) overview,
+ * validating uploads, storing the uploaded file safely on disk, recording a
+ * view, assigning categories, and enforcing who may delete a video. The
+ * controller calls this service; the service calls the models. No SQL here.
  */
 class VideoService
 {
@@ -24,18 +25,35 @@ class VideoService
      */
     private VideoModel $videoModel;
 
-    public function __construct(?VideoModel $videoModel = null)
+    /**
+     * Used to assign and read a video's categories.
+     */
+    private CategoryService $categoryService;
+
+    public function __construct(?VideoModel $videoModel = null, ?CategoryService $categoryService = null)
     {
         $this->videoModel = $videoModel ?? new VideoModel();
+        $this->categoryService = $categoryService ?? new CategoryService();
     }
 
     /**
-     * All videos with their uploader, for the overview page.
+     * Videos for the overview, optionally filtered by a search term or a
+     * category. Search takes priority over the category filter.
      *
      * @return array<int, array<string, mixed>>
      */
-    public function getAllWithUploader(): array
+    public function getOverview(?string $search, ?int $categoryId): array
     {
+        if ($search !== null && trim($search) !== '')
+        {
+            return $this->videoModel->search(trim($search));
+        }
+
+        if ($categoryId !== null && $categoryId > 0)
+        {
+            return $this->videoModel->findByCategory($categoryId);
+        }
+
         return $this->videoModel->findAllWithUser();
     }
 
@@ -50,13 +68,52 @@ class VideoService
     }
 
     /**
-     * Validate and store an uploaded video.
+     * All categories, for the overview filter and the upload form.
      *
-     * @param array<string, mixed> $file One entry from $_FILES (the video).
+     * @return array<int, array<string, mixed>>
+     */
+    public function getCategories(): array
+    {
+        return $this->categoryService->getAllCategories();
+    }
+
+    /**
+     * A single category by id (used to label a filtered overview).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getCategory(int $id): ?array
+    {
+        return $this->categoryService->getCategory($id);
+    }
+
+    /**
+     * The categories of a single video, for the detail page.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getVideoCategories(int $videoId): array
+    {
+        return $this->categoryService->getForVideo($videoId);
+    }
+
+    /**
+     * Count one view for a video.
+     */
+    public function recordView(int $id): void
+    {
+        $this->videoModel->incrementViews($id);
+    }
+
+    /**
+     * Validate and store an uploaded video, then link the chosen categories.
+     *
+     * @param array<string, mixed> $file        One entry from $_FILES.
+     * @param array<int, mixed>    $categoryIds Selected category ids.
      *
      * @return array{errors: array<int, string>, videoId: int|null}
      */
-    public function upload(int $userId, string $title, string $description, array $file): array
+    public function upload(int $userId, string $title, string $description, array $file, array $categoryIds = []): array
     {
         $title = trim($title);
         $errors = $this->validateUpload($title, $file);
@@ -79,6 +136,8 @@ class VideoService
             'description' => $description,
             'filename'    => $filename,
         ]);
+
+        $this->categoryService->assignCategories($videoId, $categoryIds);
 
         return ['errors' => [], 'videoId' => $videoId];
     }
